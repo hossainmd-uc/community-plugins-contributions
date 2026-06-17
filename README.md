@@ -55,8 +55,8 @@ From the workspaces/announcements/ directory, start the app using the new fronte
 ### Reproduction Evidence
 
 - **Commit showing reproduction:** [Link to commit in your fork]
-- **Screenshots/logs:** [If applicable]
-- **My findings:** [What you discovered during reproduction]
+- **Screenshots/logs:** The banner renders with a static blue color regardless of the `until_date` value. No visual urgency change is present.
+- **My findings:** The `AnnouncementBanner` component in `NewAnnouncementBanner.tsx` renders `<Alert status="info" ...>` with the status hardcoded at line 156. The `Announcement` type already has an `until_date?: string | null` field (defined in `announcements-common/src/types.ts`), but the banner component never reads it. There is no date-based logic anywhere in the banner rendering path.
 
 ---
 
@@ -64,7 +64,13 @@ From the workspaces/announcements/ directory, start the app using the new fronte
 
 ### Analysis
 
-[Your analysis of the root cause - what's causing the issue?]
+The root cause is a single hardcoded value in `AnnouncementBanner` inside `workspaces/announcements/plugins/announcements/src/components/NewAnnouncementBanner/NewAnnouncementBanner.tsx` at line 156:
+
+```tsx
+<Alert status="info" ... />
+```
+
+The `status` prop controls the banner color. It is never computed — it is always `"info"` (blue). The `until_date` field already exists on the `Announcement` object passed into the component via props, but is simply never used for styling.
 
 ### Proposed Solution
 
@@ -74,20 +80,27 @@ Add a helper function that computes the correct Alert status by comparing until_
 
 Using UMPIRE framework (adapted):
 
-**Understand:** [Restate the problem]
+**Understand:** The `NewAnnouncementBanner` always renders in blue regardless of how close or past the announcement's `until_date` is. It should change color to reflect urgency: blue when far out, yellow when approaching, red when imminent, and green when the date has passed but the announcement is still active.
 
-**Match:** [What similar patterns/solutions exist in the codebase?]
+**Match:** The `<Alert>` component from `@backstage/ui` already accepts `status="info"`, `status="warning"`, `status="danger"`, and `status="success"` — these map exactly to the four states the issue requests. The `luxon` `DateTime` library is already imported in `NewAnnouncementBanner.tsx` and used for date comparisons elsewhere in the same file. No new dependencies are needed.
 
-**Plan:** [Step-by-step implementation plan]
-1. [Modify file X to do Y]
-2. [Add function Z]
-3. [Update tests]
+**Plan:**
+1. In `NewAnnouncementBanner.tsx`, add a helper function `getAlertStatus(until_date?: string | null)` above the `AnnouncementBanner` component that returns the appropriate status string based on days remaining: no `until_date` or more than 4 days away → `"info"`, 3–4 days → `"warning"`, 1–2 days → `"danger"`, past due date → `"success"`.
+2. Call `getAlertStatus(announcement.until_date)` inside `AnnouncementBanner` — the `announcement` object is already available via props.
+3. Replace the hardcoded `status="info"` on line 156 with the computed value.
+4. Add new test cases to `NewAnnouncementBanner.test.tsx` covering each threshold.
 
-**Implement:** [Link to your branch/commits as you work]
+**Implement:** [Link to issue fix branch](https://github.com/hossainmd-uc/community-plugins/tree/fix-issue-7546)
 
-**Review:** [Self-review checklist - does it follow the project's contribution guidelines?]
+**Review:**
+- [ ] `yarn tsc` passes with no type errors
+- [ ] `yarn lint` passes
+- [ ] `yarn prettier:check` passes
+- [ ] No files modified outside the scope of this issue
+- [ ] Commit message follows project convention (e.g. `feat(announcements): add dynamic banner color based on until_date`)
+- [ ] Changeset added via `yarn changeset` before PR submission
 
-**Evaluate:** [How will you verify it works?]
+**Evaluate:** New tests will be added to the existing `NewAnnouncementBanner.test.tsx` file, which already uses `renderInTestApp` with a mocked `announcementsApiRef`. Tests will cover each color threshold: `until_date` more than 4 days away, 3 days away, 1 day away, past due with `active: true`, and no `until_date` set. Run with `yarn test` from `workspaces/announcements/`.
 
 ---
 
