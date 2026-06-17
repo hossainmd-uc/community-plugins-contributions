@@ -19,19 +19,19 @@ I chose this issue because I previously worked with frontend systems in my intro
 
 ### Problem Description
 
-[In your own words, what's broken or missing?]
+Currently, in the announcements workspace, wthere is a working NewAccoundementBanner file. However, the current banner is very static and lacks visual clarity to alert users of the impending deadline.
 
 ### Expected Behavior
 
-[What should happen?]
+Based on the until_date of the announcement, the color of the banner should change and reflect the urgency level, increasing in intensity as the day approaches. A proposed format was: "4-5 days" = Blue (status="info"), "3 days" = Yellow (status="warning"), "1-2 days" = Red (status="danger"), "Past date but still active" = Green (status="success").
 
 ### Current Behavior
 
-[What actually happens?]
+There is no visual color change indication based on due date distance.
 
 ### Affected Components
 
-[Which parts of the codebase are involved?]
+The Announcements Workspace.
 
 ---
 
@@ -39,13 +39,18 @@ I chose this issue because I previously worked with frontend systems in my intro
 
 ### Environment Setup
 
-[Notes on setting up your local development environment - challenges you faced, how you solved them]
+Initially, I attempted to deploy the app using yarn. However, some components were failing. As I brainstormed with AI, I realized that there was an alpha directory, which has a newer frontend implementation. This prompted me to use yarn:next to resolve the issue and start the app.
 
 ### Steps to Reproduce
 
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
+From the workspaces/announcements/ directory, start the app using the new frontend system:
+
+1. yarn start:next
+2. Open http://localhost:3000 and sign in as Guest.
+3. Navigate to Admin Portal in the left sidebar.
+4. Click Create announcement and fill in a title, excerpt, and set an Active Until date that is 1–2 days from today. Submit the form.
+5. Navigate to the Home page in the left sidebar.
+6. Observed result: The NewAnnouncementBanner appears at the top of the page with a static blue (status="info") color regardless of how close the Active Until date is. There is no color change, no urgency indication, and no countdown — the banner looks identical whether the deadline is 5 days away or 1 day away.
 
 ### Reproduction Evidence
 
