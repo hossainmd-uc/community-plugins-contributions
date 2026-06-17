@@ -68,7 +68,7 @@ From the workspaces/announcements/ directory, start the app using the new fronte
 
 ### Proposed Solution
 
-[High-level description of your fix approach]
+Add a helper function that computes the correct Alert status by comparing until_date against the current date using the luxon library (already imported in the file). Replace the hardcoded status="info" with the computed value.
 
 ### Implementation Plan
 
